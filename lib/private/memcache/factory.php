@@ -152,6 +152,18 @@ class Factory implements ICacheFactory {
 	}
 
 	/**
+	 * Create an array cache which contents will only be valid
+	 * within the current request
+	 *
+	 * @param string $prefix prefix
+	 *
+	 * @return \OC\Memcache\ArrayCache
+	 */
+	public function createArrayCache($prefix = '') {
+		return new \OC\Memcache\ArrayCache($prefix);
+	}
+
+	/**
 	 * @see \OC\Memcache\Factory::createDistributed()
 	 * @param string $prefix
 	 * @return \OC\Memcache\Cache
