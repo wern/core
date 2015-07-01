@@ -140,7 +140,11 @@ class Swift extends \OC\Files\Storage\Common {
 	}
 
 	/**
+	 * Returns whether the given path exists.
+	 *
 	 * @param string $path
+	 *
+	 * @return bool true if the object exist, false otherwise
 	 */
 	private function doesObjectExist($path) {
 		return $this->fetchObject($path) !== false;
@@ -186,6 +190,8 @@ class Swift extends \OC\Files\Storage\Common {
 			$metadataHeaders = DataObject::stockHeaders(array());
 			$allHeaders = $customHeaders + $metadataHeaders;
 			$this->getContainer()->uploadObject($path, '', $allHeaders);
+			// invalidate so that the next access gets the real object
+			// with all properties
 			$this->objectCache->remove($path);
 		} catch (Exceptions\CreateUpdateError $e) {
 			\OCP\Util::writeLog('files_external', $e->getMessage(), \OCP\Util::ERROR);
