@@ -74,7 +74,7 @@ class Swift extends \OC\Files\Storage\Common {
 	 * Key value cache mapping path to data object. Maps path to
 	 * \OpenCloud\OpenStack\ObjectStorage\Resource\DataObject for existing
 	 * paths and path to false for not existing paths.
-	 * @var \OC\Cache\ArrayCache
+	 * @var \OCP\IMemcache
 	 */
 	private $objectCache;
 
@@ -166,7 +166,8 @@ class Swift extends \OC\Files\Storage\Common {
 		}
 
 		$this->params = $params;
-		$this->objectCache = new \OC\Cache\ArrayCache();
+		// FIXME: createArrayCache is not on the interface
+		$this->objectCache = \OC::$server->getMemCacheFactory()->createArrayCache();
 	}
 
 	public function mkdir($path) {
