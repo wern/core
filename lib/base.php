@@ -848,6 +848,17 @@ class OC {
 			self::checkUpgrade();
 		}
 
+		// emergency app disabling
+		if ($request === '/disableapp' && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['appid'])) {
+			\OCP\JSON::checkAdminUser();
+			$appId = (string)$_POST['appid'];
+			$appId = \OC_App::cleanAppId($appId);
+
+			\OC_App::disable($appId);
+			\OC_JSON::success();
+			exit();
+		}
+
 		// Always load authentication apps
 		OC_App::loadApps(['authentication']);
 

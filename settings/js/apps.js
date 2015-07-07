@@ -201,11 +201,52 @@ OC.Settings.Apps = OC.Settings.Apps || {
 		return app.types && app.types.indexOf(type) !== -1;
 	},
 
+	/**
+	 * Checks the server health.
+	 *
+	 * If the promise fails, the server is broken.
+	 *
+	 * @return {Promise} promise
+	 */
+	_checkServerHealth: function() {
+		return $.get(OC.generateUrl('apps/files'));
+	},
+
 	enableApp:function(appId, active, element, groups) {
+		var self = this;
 		OC.Settings.Apps.hideErrorMessage(appId);
 		groups = groups || [];
 		var appItem = $('div#app-'+appId+'');
 		element.val(t('settings','Please wait....'));
+
+		function showAppEnabled() {
+			appItem.data('active',true);
+			element.data('active',true);
+			appItem.addClass('active');
+			element.val(t('settings','Disable'));
+			var app = OC.Settings.Apps.State.apps[appId];
+			app.active = true;
+
+			if (OC.Settings.Apps.isType(app, 'filesystem') || OC.Settings.Apps.isType(app, 'prelogin') ||
+				OC.Settings.Apps.isType(app, 'authentication') || OC.Settings.Apps.isType(app, 'logging')) {
+				element.parent().find(".groups-enable").attr('checked', null);
+				element.parent().find("#groups_enable-"+appId).hide();
+				element.parent().find("label[for='groups_enable-"+appId+"']").hide();
+				element.parent().find(".groups-enable").hide();
+				element.parent().find("#groups_enable-"+appId).hide();
+				element.parent().find("label[for='groups_enable-"+appId+"']").hide();
+				element.parent().find('#group_select').hide().val(null);
+			} else {
+				element.parent().find("#groups_enable-"+appId).show();
+				element.parent().find("label[for='groups_enable-"+appId+"']").show();
+				if (groups) {
+					appItem.data('groups', JSON.stringify(groups));
+				} else {
+					appItem.data('groups', '');
+				}
+			}
+		}
+
 		if(active && !groups.length) {
 			$.post(OC.filePath('settings','ajax','disableapp.php'),{appid:appId},function(result) {
 				if(!result || result.status !== 'success') {
@@ -233,6 +274,8 @@ OC.Settings.Apps = OC.Settings.Apps || {
 				}
 			},'json');
 		} else {
+			// TODO: display message to admin to not refresh the page!
+			// TODO: lock UI to prevent further operations
 			$.post(OC.filePath('settings','ajax','enableapp.php'),{appid: appId, groups: groups},function(result) {
 				if(!result || result.status !== 'success') {
 					if (result.data && result.data.message) {
@@ -245,32 +288,21 @@ OC.Settings.Apps = OC.Settings.Apps || {
 					element.val(t('settings','Enable'));
 					appItem.addClass('appwarning');
 				} else {
-					OC.Settings.Apps.addNavigation(appId);
-					appItem.data('active',true);
-					element.data('active',true);
-					appItem.addClass('active');
-					element.val(t('settings','Disable'));
-					var app = OC.Settings.Apps.State.apps[appId];
-					app.active = true;
-
-					if (OC.Settings.Apps.isType(app, 'filesystem') || OC.Settings.Apps.isType(app, 'prelogin') ||
-						OC.Settings.Apps.isType(app, 'authentication') || OC.Settings.Apps.isType(app, 'logging')) {
-						element.parent().find(".groups-enable").attr('checked', null);
-						element.parent().find("#groups_enable-"+appId).hide();
-						element.parent().find("label[for='groups_enable-"+appId+"']").hide();
-						element.parent().find(".groups-enable").hide();
-						element.parent().find("#groups_enable-"+appId).hide();
-						element.parent().find("label[for='groups_enable-"+appId+"']").hide();
-						element.parent().find('#group_select').hide().val(null);
-					} else {
-						element.parent().find("#groups_enable-"+appId).show();
-						element.parent().find("label[for='groups_enable-"+appId+"']").show();
-						if (groups) {
-							appItem.data('groups', JSON.stringify(groups));
-						} else {
-							appItem.data('groups', '');
-						}
-					}
+					self._checkServerHealth().done(function() {
+						OC.Settings.Apps.addNavigation(appId);
+						showAppEnabled();
+					}).fail(function() {
+						// server borked, emergency disable app
+						$.post(OC.webroot + '/index.php/disableapp', {appid: appId}, function(result) {
+							OC.Settings.Apps.showErrorMessage(
+									appId,
+								   	t('settings', 'Error: this app cannot be enabled because it makes the server unstable')
+							);
+							appItem.data('errormsg', t('settings', 'Error while disabling app'));
+							element.val(t('settings','Enable'));
+							appItem.addClass('appwarning');
+						});
+					});
 				}
 			},'json')
 				.fail(function() {
