@@ -426,9 +426,9 @@
 				return;
 			}
 
-			var randomString = OCA.Files.Files.handleDownloadSpinner(downloadFileaction);
+			OCA.Files.Files.handleDownloadSpinner(downloadFileaction);
 
-			OC.redirect(this.getDownloadUrl(files, dir) + '&downloadStartSecret=' + randomString);
+			OC.redirect(this.getDownloadUrl(files, dir));
 			return false;
 		},
 

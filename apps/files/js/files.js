@@ -286,14 +286,14 @@
 		 * - JS periodically checks for this cookie and then knows when the download has started to remove all the user feedback
 		 *
 		 * @param downloadButtonElement download fileaction
-		 * @returns {string} random token that needs to be set as cookie
 		 */
 		handleDownloadSpinner: function(downloadButtonElement) {
-			var randomString = Math.random().toString(36).substring(2),
+			var firstCall = true,
 				icon = downloadButtonElement.find('img'),
 				sourceImage = icon.attr('src'),
 				checkForDownloadCookie = function() {
-					if (!OC.Util.isCookieSetToValue('ocDownloadStarted', randomString)){
+					if (firstCall){
+						firstCall = false;
 						return false;
 					} else {
 						icon.attr('src', sourceImage);
@@ -304,9 +304,7 @@
 
 			downloadButtonElement.addClass('disabled');
 			icon.attr('src', sourceImage.replace('actions/download.svg', 'loading-small.gif'));
-			OC.Util.waitFor(checkForDownloadCookie, 500);
-
-			return randomString;
+			OC.Util.waitFor(checkForDownloadCookie, 7000);
 		}
 	};
 
