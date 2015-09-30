@@ -79,6 +79,38 @@
 				var permission = parseInt($tr.attr('data-permissions')) | OC.PERMISSION_DELETE;
 				$tr.attr('data-permissions', permission);
 			}
+
+			// add row with expiration date for link only shares - influenced by _createRow of filelist
+			if (this._linksOnly) {
+				var expirationTimestamp = moment(fileData.shares[0].expiration).valueOf();
+				$tr.attr('data-expiration', expirationTimestamp);
+
+				// date column (1000 milliseconds to seconds, 60 seconds, 60 minutes, 24 hours)
+				// difference in days multiplied by 5 - brightest shade for expiry dates in more than 32 days (160/5)
+				var modifiedColor = Math.round((expirationTimestamp - (new Date()).getTime()) / 1000 / 60 / 60 / 24 * 5);
+				// ensure that the brightest color is still readable
+				if (modifiedColor >= '160') {
+					modifiedColor = 160;
+				}
+
+				if (expirationTimestamp > 0) {
+					formatted = OC.Util.formatDate(expirationTimestamp);
+					text = OC.Util.relativeModifiedDate(expirationTimestamp);
+				} else {
+					formatted = t('files_sharing', 'No expiration date set');
+					text = '';
+				}
+				td = $('<td></td>').attr({"class": "date"});
+				td.append($('<span></span>').attr({
+						"class": "modified",
+						"title": formatted,
+						"style": 'color:rgb(' + modifiedColor + ',' + modifiedColor + ',' + modifiedColor + ')'
+					}).text(text)
+						.tooltip({placement: 'top'})
+				);
+
+				$tr.append(td);
+			}
 			return $tr;
 		},
 
@@ -147,6 +179,11 @@
 			);
 			if (result.ocs && result.ocs.data) {
 				this.setFiles(this._makeFilesFromShares(result.ocs.data));
+
+				// hide expiration date header for non link only shares
+				if (!this._linksOnly) {
+					this.$el.find('th.column-expiration').addClass('hidden');
+				}
 			}
 			else {
 				// TODO: error handling
@@ -194,6 +231,7 @@
 						type: share.share_type,
 						target: share.share_with,
 						stime: share.stime * 1000,
+						expiration: share.expiration,
 					};
 					if (self._sharedWithUser) {
 						file.shareOwner = share.displayname_owner;
