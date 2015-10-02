@@ -270,7 +270,7 @@ class Util {
 
 	public function getUserWithAccessToMountPoint($users, $groups) {
 		$result = array();
-		if (in_array('all', $users)) {
+		if (empty($users) && empty($groups)) {
 			$result = \OCP\User::getUsers();
 		} else {
 			$result = array_merge($result, $users);
@@ -310,7 +310,13 @@ class Util {
 	 * @return boolean
 	 */
 	private function isMountPointApplicableToUser($mount, $uid) {
-		$acceptedUids = array('all', $uid);
+
+		// system wide mount point for all users/groups
+		if (empty($mount['applicable']['groups']) && empty($mount['applicable']['users'])) {
+			return true;
+		}
+
+		$acceptedUids = array($uid);
 		// check if mount point is applicable for the user
 		$intersection = array_intersect($acceptedUids, $mount['applicable']['users']);
 		if (!empty($intersection)) {
