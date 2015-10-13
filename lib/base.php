@@ -820,7 +820,7 @@ class OC {
 			}
 		}
 
-		if (!self::$CLI and (!isset($_GET["logout"]) or ($_GET["logout"] !== 'true'))) {
+		if (!self::$CLI) {
 			try {
 				if (!$systemConfig->getValue('maintenance', false) && !self::checkUpgrade(false)) {
 					OC_App::loadApps(array('filesystem', 'logging'));
@@ -838,17 +838,6 @@ class OC {
 			}
 		}
 
-		// Handle redirect URL for logged in users
-		if (isset($_REQUEST['redirect_url']) && OC_User::isLoggedIn()) {
-			$location = OC_Helper::makeURLAbsolute(urldecode($_REQUEST['redirect_url']));
-
-			// Deny the redirect if the URL contains a @
-			// This prevents unvalidated redirects like ?redirect_url=:user@domain.com
-			if (strpos($location, '@') === false) {
-				header('Location: ' . $location);
-				return;
-			}
-		}
 		// Handle WebDAV
 		if ($_SERVER['REQUEST_METHOD'] == 'PROPFIND') {
 			// not allowed any more to prevent people
@@ -859,34 +848,16 @@ class OC {
 			return;
 		}
 
-		// Redirect to index if the logout link is accessed without valid session
-		// this is needed to prevent "Token expired" messages while login if a session is expired
-		// @see https://github.com/owncloud/core/pull/8443#issuecomment-42425583
-		if(isset($_GET['logout']) && !OC_User::isLoggedIn()) {
-			header("Location: " . OC::$WEBROOT.(empty(OC::$WEBROOT) ? '/' : ''));
-			return;
-		}
-
 		// Someone is logged in
 		if (OC_User::isLoggedIn()) {
 			OC_App::loadApps();
 			OC_User::setupBackends();
 			OC_Util::setupFS();
-			if (isset($_GET["logout"]) and ($_GET["logout"])) {
-				OC_JSON::callCheck();
-				if (isset($_COOKIE['oc_token'])) {
-					\OC::$server->getConfig()->deleteUserValue(OC_User::getUser(), 'login_token', $_COOKIE['oc_token']);
-				}
-				OC_User::logout();
-				// redirect to webroot and add slash if webroot is empty
-				header("Location: " . OC::$WEBROOT.(empty(OC::$WEBROOT) ? '/' : ''));
-			} else {
-				// Redirect to default application
-				OC_Util::redirectToDefaultPage();
-			}
+			// FIXME
+			OC_Util::redirectToDefaultPage();
 		} else {
 			// Not handled and not logged in
-			self::handleLogin();
+			header('Location: '.\OC::$server->getURLGenerator()->linkToRouteAbsolute('core.login.showLoginPage'));
 		}
 	}
 
@@ -910,151 +881,6 @@ class OC {
 			}
 		}
 	}
-
-	protected static function handleLogin() {
-		OC_App::loadApps(array('prelogin'));
-		$error = array();
-		$messages = [];
-
-		try {
-			// auth possible via apache module?
-			if (OC::tryApacheAuth()) {
-				$error[] = 'apacheauthfailed';
-			} // remember was checked after last login
-			elseif (OC::tryRememberLogin()) {
-				$error[] = 'invalidcookie';
-			} // logon via web form
-			elseif (OC::tryFormLogin()) {
-				$error[] = 'invalidpassword';
-			}
-		} catch (\OC\User\LoginException $e) {
-			$messages[] = $e->getMessage();
-		} catch (\Exception $ex) {
-			\OCP\Util::logException('handleLogin', $ex);
-			// do not disclose information. show generic error
-			$error[] = 'internalexception';
-		}
-
-		OC_Util::displayLoginPage(array_unique($error), $messages);
-	}
-
-	/**
-	 * Remove outdated and therefore invalid tokens for a user
-	 * @param string $user
-	 */
-	protected static function cleanupLoginTokens($user) {
-		$config = \OC::$server->getConfig();
-		$cutoff = time() - $config->getSystemValue('remember_login_cookie_lifetime', 60 * 60 * 24 * 15);
-		$tokens = $config->getUserKeys($user, 'login_token');
-		foreach ($tokens as $token) {
-			$time = $config->getUserValue($user, 'login_token', $token);
-			if ($time < $cutoff) {
-				$config->deleteUserValue($user, 'login_token', $token);
-			}
-		}
-	}
-
-	/**
-	 * Try to login a user via HTTP authentication
-	 * @return bool|void
-	 */
-	protected static function tryApacheAuth() {
-		$return = OC_User::handleApacheAuth();
-
-		// if return is true we are logged in -> redirect to the default page
-		if ($return === true) {
-			$_REQUEST['redirect_url'] = \OC::$server->getRequest()->getRequestUri();
-			OC_Util::redirectToDefaultPage();
-			exit;
-		}
-
-		// in case $return is null apache based auth is not enabled
-		return is_null($return) ? false : true;
-	}
-
-	/**
-	 * Try to login a user using the remember me cookie.
-	 * @return bool Whether the provided cookie was valid
-	 */
-	protected static function tryRememberLogin() {
-		if (!isset($_COOKIE["oc_remember_login"])
-			|| !isset($_COOKIE["oc_token"])
-			|| !isset($_COOKIE["oc_username"])
-			|| !$_COOKIE["oc_remember_login"]
-			|| !OC_Util::rememberLoginAllowed()
-		) {
-			return false;
-		}
-
-		if (\OC::$server->getConfig()->getSystemValue('debug', false)) {
-			\OCP\Util::writeLog('core', 'Trying to login from cookie', \OCP\Util::DEBUG);
-		}
-
-		if(OC_User::userExists($_COOKIE['oc_username'])) {
-			self::cleanupLoginTokens($_COOKIE['oc_username']);
-			// verify whether the supplied "remember me" token was valid
-			$granted = OC_User::loginWithCookie(
-				$_COOKIE['oc_username'], $_COOKIE['oc_token']);
-			if($granted === true) {
-				OC_Util::redirectToDefaultPage();
-				// doesn't return
-			}
-			\OCP\Util::writeLog('core', 'Authentication cookie rejected for user ' .
-				$_COOKIE['oc_username'], \OCP\Util::WARN);
-			// if you reach this point you have changed your password
-			// or you are an attacker
-			// we can not delete tokens here because users may reach
-			// this point multiple times after a password change
-		}
-
-		OC_User::unsetMagicInCookie();
-		return true;
-	}
-
-	/**
-	 * Tries to login a user using the form based authentication
-	 * @return bool|void
-	 */
-	protected static function tryFormLogin() {
-		if (!isset($_POST["user"]) || !isset($_POST['password'])) {
-			return false;
-		}
-
-		if(!OC_Util::isCallRegistered()) {
-			return false;
-		}
-		OC_App::loadApps();
-
-		//setup extra user backends
-		OC_User::setupBackends();
-
-		if (OC_User::login((string)$_POST["user"], (string)$_POST["password"])) {
-			$userId = OC_User::getUser();
-
-			// setting up the time zone
-			if (isset($_POST['timezone-offset'])) {
-				self::$server->getSession()->set('timezone', (string)$_POST['timezone-offset']);
-				self::$server->getConfig()->setUserValue($userId, 'core', 'timezone', (string)$_POST['timezone']);
-			}
-
-			self::cleanupLoginTokens($userId);
-			if (!empty($_POST["remember_login"])) {
-				$config = self::$server->getConfig();
-				if ($config->getSystemValue('debug', false)) {
-					self::$server->getLogger()->debug('Setting remember login to cookie', array('app' => 'core'));
-				}
-				$token = \OC::$server->getSecureRandom()->getMediumStrengthGenerator()->generate(32);
-				$config->setUserValue($userId, 'login_token', $token, time());
-				OC_User::setMagicInCookie($userId, $token);
-			} else {
-				OC_User::unsetMagicInCookie();
-			}
-			OC_Util::redirectToDefaultPage();
-			exit();
-		}
-		return true;
-	}
-
 }
 
 

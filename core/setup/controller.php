@@ -99,6 +99,7 @@ class Controller {
 		if( file_exists( $this->autoConfigFile )) {
 			unlink($this->autoConfigFile);
 		}
+		// FIXME
 		\OC_Util::redirectToDefaultPage();
 	}
 

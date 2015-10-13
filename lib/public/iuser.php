@@ -144,4 +144,21 @@ interface IUser {
 	 * @since 8.0.0
 	 */
 	public function setEnabled($enabled);
+
+	/**
+	 * Whether Two-Factor authentication is enforced for the user
+	 *
+	 * @return bool
+	 * @since 9.0.0
+	 */
+	public function isTwoFactorEnforced();
+
+	/**
+	 * Get a list of authentication tokens that can be used for authentication
+	 * instead of username-passwords. An authentication token will bypass
+	 * two-factor authentication and may be revoked.
+	 *
+	 * @return array
+	 */
+	public function getAuthenticationTokens();
 }

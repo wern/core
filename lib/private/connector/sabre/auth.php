@@ -30,6 +30,7 @@
 namespace OC\Connector\Sabre;
 
 use Exception;
+use OCP\IUser;
 use Sabre\DAV\Auth\Backend\AbstractBasic;
 use Sabre\DAV\Exception\NotAuthenticated;
 use Sabre\DAV\Exception\ServiceUnavailable;
@@ -72,6 +73,23 @@ class Auth extends AbstractBasic {
 			return true;
 		} else {
 			\OC_Util::setUpFS(); //login hooks may need early access to the filesystem
+
+			// FIXME: Will this cause problems with the displayname such as when used
+			//        in combination with user_ldap?
+			//        Needs investigation.
+			$user = \OC::$server->getUserManager()->get($username);
+
+			if($user instanceof IUser &&
+				$user->isTwoFactorEnforced()) {
+				if(in_array($password, $user->getAuthenticationTokens(), true)) {
+					\OC::$server->getUserSession()->setUser($user);
+					\OC::$server->getSession()->set(self::DAV_AUTHENTICATED, $user->getUID());
+					\OC::$server->getSession()->close();
+					return true;
+				}
+				return false;
+			}
+
 			if(\OC_User::login($username, $password)) {
 			        // make sure we use ownCloud's internal username here
 			        // and not the HTTP auth supplied one, see issue #14048

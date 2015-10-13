@@ -242,6 +242,8 @@ class OC_User {
 	 * @return boolean|null
 	 *
 	 * Log in a user and regenerate a new session - if the password is ok
+	 *
+	 * @deprecated Use \OCP\IUserSession::login
 	 */
 	public static function login($loginname, $password) {
 		session_regenerate_id(true);
@@ -413,7 +415,7 @@ class OC_User {
 			return $backend->getLogoutAttribute();
 		}
 
-		return 'href="' . link_to('', 'index.php') . '?logout=true&amp;requesttoken=' . urlencode(OC_Util::callRegister()) . '"';
+		return 'href="' . \OC::$server->getURLGenerator()->linkToRouteAbsolute('core.login.logout') . '?requesttoken=' . urlencode(OC_Util::callRegister()) . '"';
 	}
 
 	/**
