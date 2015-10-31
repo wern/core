@@ -4,7 +4,9 @@ namespace OCA\DAV;
 
 use OCA\DAV\CalDAV\CalDavBackend;
 use OCA\DAV\CardDAV\CardDavBackend;
+>>>>>>> c6c1b48... WIP - start CalDAV
 use OCA\DAV\Connector\Sabre\Principal;
+use Sabre\CalDAV\CalendarRoot;
 use Sabre\CalDAV\Principal\Collection;
 use Sabre\CardDAV\AddressBookRoot;
 use Sabre\DAV\SimpleCollection;
@@ -31,6 +33,7 @@ class RootCollection extends SimpleCollection {
 		$cardDavBackend = new CardDavBackend(\OC::$server->getDatabaseConnection());
 		$addressBookRoot = new AddressBookRoot($principalBackend, $cardDavBackend);
 		$addressBookRoot->disableListing = $disableListing;
+		$calendarRoot->disableListing = true; // Disable listening
 
 		$children = [
 			$principalCollection,
