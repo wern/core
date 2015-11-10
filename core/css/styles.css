@@ -332,7 +332,7 @@ input:disabled+label, input:disabled:hover+label, input:disabled:focus+label {
 .searchbox input[type="search"]:active,
 .searchbox input[type="search"]:valid {
 	color: #fff;
-	width: 155px;
+	width: 100px;
 	max-width: 50%;
 	cursor: text;
 	background-color: #112;
@@ -359,7 +359,7 @@ input[type="submit"].enabled {
 	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
 	position: fixed;
-	top: 45px;
+	top: 0;
 	right: 0;
 	left: 0;
 	height: 44px;
@@ -412,7 +412,6 @@ input[type="submit"].enabled {
 	height: 100%;
 	width: 100%;
 	overflow-x: hidden; /* prevent horizontal scrollbar */
-	padding-top: 45px;
 	-moz-box-sizing:border-box;
 	box-sizing:border-box;
 }

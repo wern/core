@@ -21,17 +21,16 @@
 	box-align: center;
 }
 
+#body-user #header,
+#body-settings #header,
+#body-public #header {
+	width: 100%;
+	right: 0;
+}
+
 /* on mobile public share, show only the icon of the logo, hide the text */
 #body-public #header .header-appname-container {
 	display: none;
-}
-
-/* do not show display name on mobile when profile picture is present */
-#header .avatardiv.avatardiv-shown + #expandDisplayName {
-	display: none;
-}
-#header #expand {
-	display: block;
 }
 
 /* do not show update notification on mobile */
