@@ -40,6 +40,7 @@ use Exception;
 use OCP\IConfig;
 use OCP\IL10N;
 use OCP\ILogger;
+use OCP\IURLGenerator;
 use OCP\Security\ISecureRandom;
 
 class Setup {
@@ -55,6 +56,8 @@ class Setup {
 	protected $logger;
 	/** @var ISecureRandom */
 	protected $random;
+	/** @var IURLGenerator */
+	protected $urlGenerator;
 
 	/**
 	 * @param IConfig $config
@@ -66,7 +69,8 @@ class Setup {
 						 IL10N $l10n,
 						 \OC_Defaults $defaults,
 						 ILogger $logger,
-						 ISecureRandom $random
+						 ISecureRandom $random,
+						 IURLGenerator $urlGenerator
 		) {
 		$this->config = $config;
 		$this->iniWrapper = $iniWrapper;
@@ -74,6 +78,7 @@ class Setup {
 		$this->defaults = $defaults;
 		$this->logger = $logger;
 		$this->random = $random;
+		$this->urlGenerator = $urlGenerator;
 	}
 
 	static $dbSetupClasses = array(
@@ -283,7 +288,12 @@ class Setup {
 			(!is_dir($dataDir) and !mkdir($dataDir)) or
 			!is_writable($dataDir)
 		) {
-			$error[] = $l->t("Can't create or write into the data directory %s", array($dataDir));
+			$error[] = [
+				'error' => $l->t("Can't create or write into the data directory %s", array($dataDir)),
+				'hint' => '<a href="' . $this->urlGenerator->linkToDocs('admin-dir_permissions') . '" target="_blank">' .
+							$l->t('For more details check out the documentation.') .
+							'↗</a>',
+			];
 		}
 
 		if(count($error) != 0) {
@@ -417,7 +427,7 @@ class Setup {
 	public static function updateHtaccess() {
 		$setupHelper = new \OC\Setup(\OC::$server->getConfig(), \OC::$server->getIniWrapper(),
 			\OC::$server->getL10N('lib'), new \OC_Defaults(), \OC::$server->getLogger(),
-			\OC::$server->getSecureRandom());
+			\OC::$server->getSecureRandom(), \OC::$server->getURLGenerator());
 		if(!$setupHelper->isCurrentHtaccess()) {
 			throw new \OC\HintException('.htaccess file has the wrong version. Please upload the correct version. Maybe you forgot to replace it after updating?');
 		}
