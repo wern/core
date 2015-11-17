@@ -2,17 +2,16 @@
 SCRIPT=`realpath $0`
 SCRIPTPATH=`dirname $SCRIPT`
 
+cd "$SCRIPTPATH"
 
 # start the server
 php -S 127.0.0.1:8888 -t "$SCRIPTPATH/../../../.." &
 
-
-if [ ! -f CalDAVTester/run.py ]; then
-	cd "$SCRIPTPATH"
-    git clone https://github.com/DeepDiver1975/CalDAVTester.git
-	cd "$SCRIPTPATH/CalDAVTester"
-    python run.py -s
-	cd "$SCRIPTPATH"
+if [ ! -d CalDAVTester ]; then
+    svn checkout http://svn.calendarserver.org/repository/calendarserver/CalDAVTester/trunk CalDAVTester
+fi
+if [ ! -d pycalendar ]; then
+    svn checkout http://svn.calendarserver.org/repository/calendarserver/PyCalendar/trunk/ pycalendar
 fi
 
 # create test user
