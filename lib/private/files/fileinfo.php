@@ -29,6 +29,7 @@
 namespace OC\Files;
 
 use OCP\IUser;
+use OC\Files\Mount\MoveableMount;
 
 class FileInfo implements \OCP\Files\FileInfo, \ArrayAccess {
 	/**
@@ -181,7 +182,16 @@ class FileInfo implements \OCP\Files\FileInfo, \ArrayAccess {
 	 * @return int
 	 */
 	public function getPermissions() {
-		return $this->data['permissions'];
+		$permissions = $this->data['permissions'];
+		// if this is the mount point itself
+		if (empty($this->internalPath)) {
+			if ($this->mount instanceof MoveableMount) {
+				$permissions = $permissions | \OCP\Constants::PERMISSION_UPDATE | \OCP\Constants::PERMISSION_DELETE;
+			} else {
+				$permissions = $permissions & (\OCP\Constants::PERMISSION_ALL - (\OCP\Constants::PERMISSION_UPDATE | \OCP\Constants::PERMISSION_DELETE));
+			}
+		}
+		return $permissions;
 	}
 
 	/**
