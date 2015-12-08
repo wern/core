@@ -289,6 +289,10 @@ class USER_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 				//TODO: if home directory changes, the old one needs to be removed.
 				return $homedir;
 			}
+
+			\OCP\Util::writeLog('user_ldap',
+					'Home dir attribute can\'t be read from LDAP for uid: ' . $uid,
+					\OCP\Util::ERROR);
 		}
 
 		//false will apply default behaviour as defined and done by OC_User
