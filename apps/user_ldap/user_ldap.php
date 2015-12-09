@@ -290,7 +290,9 @@ class USER_LDAP extends BackendUtility implements \OCP\IUserBackend, \OCP\UserIn
 				return $homedir;
 			}
 
-			$e = new \Exception('Home dir attribute can\'t be read from LDAP for uid: ' . $uid . ' - attribute: ' . $attr . ' - username2dn: ' . $this->access->username2dn($uid));
+			$ldap = new \OCA\user_ldap\lib\LDAP();
+			$errorNo = $ldap->errno($this->access->connection->getConnectionResource());
+			$e = new \Exception('Home dir attribute can\'t be read from LDAP for uid: ' . $uid . ' - attribute: ' . $attr . ' - username2dn: ' . $this->access->username2dn($uid) . ' Error: ' . $errorNo . ' ' . ldap_err2str($errorNo));
 			\OCP\Util::logException('user_ldap', $e);
 		}
 
