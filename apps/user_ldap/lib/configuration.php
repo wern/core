@@ -27,6 +27,9 @@
 
 namespace OCA\user_ldap\lib;
 
+/**
+ * @property int ldapPagingSize holds an integer
+ */
 class Configuration {
 
 	protected $configPrefix = null;
