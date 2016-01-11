@@ -2,11 +2,10 @@
 
 use OCA\Migrate_Dav\Command\MigrateAddressbooks;
 
-$config = \OC::$server->getConfig();
-$dbConnection = \OC::$server->getDatabaseConnection();
+$app = new \OCA\Migrate_Dav\AppInfo\Application();
+
 $userManager = OC::$server->getUserManager();
-$config = \OC::$server->getConfig();
-$logger = \OC::$server->getLogger();
+$service = $app->getMigrationService();
 
 /** @var Symfony\Component\Console\Application $application */
-$application->add(new MigrateAddressbooks($userManager, $dbConnection, $config, $logger));
+$application->add(new MigrateAddressbooks($userManager, $service));
