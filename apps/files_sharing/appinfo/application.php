@@ -105,7 +105,8 @@ class Application extends App {
 			/** @var \OCP\IServerContainer $server */
 			$server = $c->query('ServerContainer');
 			return new MountProvider(
-				$server->getConfig()
+				$server->getConfig(),
+				$server->getShareManager()
 			);
 		});
 
