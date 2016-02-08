@@ -35,8 +35,8 @@ trait FrontendDefinitionTrait {
 	/** @var DefinitionParameter[] parameters for mechanism */
 	private $parameters = [];
 
-	/** @var string|null custom JS */
-	private $customJs = null;
+	/** @var string[] custom JS */
+	private $customJs = [];
 
 	/**
 	 * @return string
@@ -91,7 +91,7 @@ trait FrontendDefinitionTrait {
 	}
 
 	/**
-	 * @return string|null
+	 * @return string[]
 	 */
 	public function getCustomJs() {
 		return $this->customJs;
@@ -101,8 +101,8 @@ trait FrontendDefinitionTrait {
 	 * @param string $custom
 	 * @return self
 	 */
-	public function setCustomJs($custom) {
-		$this->customJs = $custom;
+	public function addCustomJs($custom) {
+		$this->customJs[] = $custom;
 		return $this;
 	}
 
@@ -120,10 +120,8 @@ trait FrontendDefinitionTrait {
 		$data = [
 			'name' => $this->getText(),
 			'configuration' => $configuration,
+			'custom' => $this->getCustomJs(),
 		];
-		if (isset($this->customJs)) {
-			$data['custom'] = $this->getCustomJs();
-		}
 		return $data;
 	}
 
