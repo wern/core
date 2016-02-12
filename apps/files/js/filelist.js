@@ -755,6 +755,9 @@
 			}
 
 			this.move(_.pluck(files, 'name'), targetPath);
+
+			// re-enable td elements to be droppable
+			self.$el.find('td.filename.ui-droppable').droppable('enable');
 		},
 
 		/**
