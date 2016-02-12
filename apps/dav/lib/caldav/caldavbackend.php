@@ -138,6 +138,7 @@ class CalDavBackend extends AbstractBackend implements SyncSupport, Subscription
 	 * @return array
 	 */
 	function getCalendarsForUser($principalUri) {
+		$principalUri = $this->convertPrincipal($principalUri, true);
 		$fields = array_values($this->propertyMap);
 		$fields[] = 'id';
 		$fields[] = 'uri';
@@ -164,7 +165,7 @@ class CalDavBackend extends AbstractBackend implements SyncSupport, Subscription
 			$calendar = [
 				'id' => $row['id'],
 				'uri' => $row['uri'],
-				'principaluri' => $row['principaluri'],
+				'principaluri' => $this->convertPrincipal($row['principaluri'], false),
 				'{' . Plugin::NS_CALENDARSERVER . '}getctag' => 'http://sabre.io/ns/sync/' . ($row['synctoken']?$row['synctoken']:'0'),
 				'{http://sabredav.org/ns}sync-token' => $row['synctoken']?$row['synctoken']:'0',
 				'{' . Plugin::NS_CALDAV . '}supported-calendar-component-set' => new SupportedCalendarComponentSet($components),
@@ -1088,7 +1089,7 @@ class CalDavBackend extends AbstractBackend implements SyncSupport, Subscription
 			$newValues = [];
 
 			foreach($mutations as $propertyName=>$propertyValue) {
-			if ($propertyName === '{http://calendarserver.org/ns/}source') {
+				if ($propertyName === '{http://calendarserver.org/ns/}source') {
 					$newValues['source'] = $propertyValue->getHref();
 				} else {
 					$fieldName = $this->subscriptionPropertyMap[$propertyName];
@@ -1366,5 +1367,16 @@ class CalDavBackend extends AbstractBackend implements SyncSupport, Subscription
 	 */
 	public function applyShareAcl($resourceId, $acl) {
 		return $this->sharingBackend->applyShareAcl($resourceId, $acl);
+	}
+
+	private function convertPrincipal($principalUri, $toV2) {
+		if ($this->principalBackend->getPrincipalPrefix() === 'principals') {
+			list(, $name) = URLUtil::splitPath($principalUri);
+			if ($toV2 === true) {
+				return "principals/users/$name";
+			}
+			return "principals/$name";
+		}
+		return $principalUri;
 	}
 }
