@@ -329,7 +329,6 @@
 					displayName: t('files', 'Details'),
 					mime: 'all',
 					order: -50,
-					class: 'icon-details',
 					permissions: OC.PERMISSION_READ,
 					actionHandler: function(fileName, context) {
 						self._updateDetailsView(fileName);
@@ -2722,7 +2721,7 @@
 			}
 			var $newButton = $(this._addButtonTemplate({
 				addText: t('files', 'New'),
-    			class: 'icon-add',
+				class: 'icon-add'
 			}));
 
 			$actionsContainer.prepend($newButton);

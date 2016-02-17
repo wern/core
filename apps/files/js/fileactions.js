@@ -11,7 +11,7 @@
 (function() {
 
 	var TEMPLATE_FILE_ACTION_TRIGGER =
-		'<a class="action action-{{nameLowerCase}} icon-{{nameLowerCase}}" href="#" data-action="{{name}}">' +
+		'<a class="action action-{{nameLowerCase}} {{iconClass}}" href="#" data-action="{{name}}">' +
 		'{{#if icon}}<img class="svg" alt="{{altText}}" src="{{icon}}" />{{/if}}' +
 		'{{#if displayName}}<span> {{displayName}}</span>{{/if}}' +
 		'</a>';
@@ -142,8 +142,8 @@
 				displayName: action.displayName,
 				mime: mime,
 				order: action.order || 0,
-				class: action.class,
 				icon: action.icon,
+				iconClass: action.iconClass,
 				permissions: action.permissions,
 				type: action.type || FileActions.TYPE_DROPDOWN,
 				altText: action.altText || ''
@@ -300,6 +300,7 @@
 					nameLowerCase: actionSpec.name.toLowerCase(),
 					displayName: actionSpec.displayName,
 					icon: actionSpec.icon,
+					iconClass: actionSpec.iconClass || 'icon-' + actionSpec.name.toLowerCase(),
 					altText: actionSpec.altText,
 				};
 				if (_.isFunction(actionSpec.icon)) {
