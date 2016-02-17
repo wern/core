@@ -132,6 +132,8 @@ class GetSharedSecret extends QueuedJob{
 		$source = rtrim($source, '/');
 		$token = $argument['token'];
 
+		$this->logger->error("I'm $source and ask $target for the shared secret with the Token $token.", ['app' => 'federation']);
+
 		try {
 			$result = $this->httpClient->get(
 				$target . $this->endPoint,
@@ -151,11 +153,13 @@ class GetSharedSecret extends QueuedJob{
 		} catch (ClientException $e) {
 			$status = $e->getCode();
 			if ($status === Http::STATUS_FORBIDDEN) {
-				$this->logger->info($target . ' refused to exchange a shared secret with you.', ['app' => 'federation']);
+				$this->logger->error($target . ' refused to exchange a shared secret with you.', ['app' => 'federation']);
 			} else {
+				$this->logger->error($source . ': UNKNOWN CLIENT EXCEPTION', ['app' => 'federation']);
 				$this->logger->logException($e, ['app' => 'federation']);
 			}
 		} catch (\Exception $e) {
+			$this->logger->error($source . ': UNKNOWN GENERAL EXCEPTION', ['app' => 'federation']);
 			$status = HTTP::STATUS_INTERNAL_SERVER_ERROR;
 			$this->logger->logException($e, ['app' => 'federation']);
 		}
@@ -165,11 +169,13 @@ class GetSharedSecret extends QueuedJob{
 			$status !== Http::STATUS_OK
 			&& $status !== Http::STATUS_FORBIDDEN
 		) {
+			$this->logger->error("Ask $target for the shared secret later again.", ['app' => 'federation']);
 			$this->jobList->add(
 				'OCA\Federation\BackgroundJob\GetSharedSecret',
 				$argument
 			);
 		}  else {
+			$this->logger->error("Got valid return code from $target ($status) so we can remove the token", ['app' => 'federation']);
 			// reset token if we received a valid response
 			$this->dbHandler->addToken($target, '');
 		}
@@ -178,13 +184,14 @@ class GetSharedSecret extends QueuedJob{
 			$body = $result->getBody();
 			$result = json_decode($body, true);
 			if (isset($result['ocs']['data']['sharedSecret'])) {
+				$this->logger->error("Add shared secret received from $target", ['app' => 'federation']);
 				$this->trustedServers->addSharedSecret(
 						$target,
 						$result['ocs']['data']['sharedSecret']
 				);
 			} else {
 				$this->logger->error(
-						'remote server "' . $target . '"" does not return a valid shared secret',
+						'REMOTE SERVER "' . $target . '"" DOES NOT RETURN A VALID SHARED SECRET',
 						['app' => 'federation']
 				);
 				$this->trustedServers->setServerStatus($target, TrustedServers::STATUS_FAILURE);

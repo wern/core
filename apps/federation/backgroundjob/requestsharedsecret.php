@@ -131,6 +131,8 @@ class RequestSharedSecret extends QueuedJob {
 		$source = rtrim($source, '/');
 		$token = $argument['token'];
 
+		$this->logger->error("I'm $source and ask $target to request the shared secret from me.", ['app' => 'federation']);
+
 		try {
 			$result = $this->httpClient->post(
 				$target . $this->endPoint,
@@ -149,11 +151,13 @@ class RequestSharedSecret extends QueuedJob {
 		} catch (ClientException $e) {
 			$status = $e->getCode();
 			if ($status === Http::STATUS_FORBIDDEN) {
-				$this->logger->info($target . ' refused to ask for a shared secret.', ['app' => 'federation']);
+				$this->logger->error($target . ' refused to ask for a shared secret.', ['app' => 'federation']);
 			} else {
+				$this->logger->error($target . ': UNKNOWN CLIENT EXCEPTION', ['app' => 'federation']);
 				$this->logger->logException($e, ['app' => 'federation']);
 			}
 		} catch (\Exception $e) {
+			$this->logger->error($target . ': UNKNOWN GENERAL EXCEPTION', ['app' => 'federation']);
 			$status = HTTP::STATUS_INTERNAL_SERVER_ERROR;
 			$this->logger->logException($e, ['app' => 'federation']);
 		}
@@ -163,6 +167,7 @@ class RequestSharedSecret extends QueuedJob {
 			$status !== Http::STATUS_OK
 			&& $status !== Http::STATUS_FORBIDDEN
 		) {
+			$this->logger->error("Ask $target to request the shared secret from me later again.", ['app' => 'federation']);
 			$this->jobList->add(
 				'OCA\Federation\BackgroundJob\RequestSharedSecret',
 				$argument
@@ -170,6 +175,7 @@ class RequestSharedSecret extends QueuedJob {
 		}
 
 		if ($status === Http::STATUS_FORBIDDEN) {
+			$this->logger->error("$target will not ask for the shared secret so we can remove the token", ['app' => 'federation']);
 			// clear token if remote server refuses to ask for shared secret
 			$this->dbHandler->addToken($target, '');
 		}

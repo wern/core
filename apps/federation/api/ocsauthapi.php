@@ -98,7 +98,7 @@ class OCSAuthAPI {
 		$token = $this->request->getParam('token');
 
 		if ($this->trustedServers->isTrustedServer($url) === false) {
-			$this->logger->error('remote server not trusted (' . $url . ') while requesting shared secret', ['app' => 'federation']);
+			$this->logger->error('REMOTE SERVER NOT TRUSTED (' . $url . ') while requesting shared secret', ['app' => 'federation']);
 			return new \OC_OCS_Result(null, HTTP::STATUS_FORBIDDEN);
 		}
 
@@ -106,12 +106,14 @@ class OCSAuthAPI {
 		// token wins
 		$localToken = $this->dbHandler->getToken($url);
 		if (strcmp($localToken, $token) > 0) {
-			$this->logger->info(
+			$this->logger->error(
 				'remote server (' . $url . ') presented lower token. We will initiate the exchange of the shared secret.',
 				['app' => 'federation']
 			);
 			return new \OC_OCS_Result(null, HTTP::STATUS_FORBIDDEN);
 		}
+
+		$this->logger->error("Accepted to ask $url for shared secret with token $token", ['app' => 'federation']);
 
 		// we ask for the shared secret so we no longer have to ask the other server
 		// to request the shared secret
@@ -163,6 +165,8 @@ class OCSAuthAPI {
 		$this->trustedServers->addSharedSecret($url, $sharedSecret);
 		// reset token after the exchange of the shared secret was successful
 		$this->dbHandler->addToken($url, '');
+
+		$this->logger->error("Send back shared secret $sharedSecret to $url", ['app' => 'federation']);
 
 		return new \OC_OCS_Result(['sharedSecret' => $sharedSecret], Http::STATUS_OK);
 
