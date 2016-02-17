@@ -10,7 +10,7 @@
 
 (function() {
 
-	var TEMPLATE_ADDBUTTON = '<a href="#" class="button new"><img src="{{iconUrl}}" alt="{{addText}}"></img></a>';
+	var TEMPLATE_ADDBUTTON = '<a href="#" class="button new {{class}}"><span class="hidden-visually">{{addText}}</span></a>';
 
 	/**
 	 * @class OCA.Files.FileList
@@ -2722,7 +2722,8 @@
 			}
 			var $newButton = $(this._addButtonTemplate({
 				addText: t('files', 'New'),
-				iconUrl: OC.imagePath('core', 'actions/add')
+				//iconUrl: OC.imagePath('core', 'actions/add'),
+    			class: 'icon-add',
 			}));
 
 			$actionsContainer.prepend($newButton);
