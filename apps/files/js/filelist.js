@@ -329,7 +329,7 @@
 					displayName: t('files', 'Details'),
 					mime: 'all',
 					order: -50,
-					icon: OC.imagePath('core', 'actions/details'),
+					class: 'icon-details',
 					permissions: OC.PERMISSION_READ,
 					actionHandler: function(fileName, context) {
 						self._updateDetailsView(fileName);
@@ -2722,7 +2722,6 @@
 			}
 			var $newButton = $(this._addButtonTemplate({
 				addText: t('files', 'New'),
-				//iconUrl: OC.imagePath('core', 'actions/add'),
     			class: 'icon-add',
 			}));
 

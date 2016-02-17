@@ -11,7 +11,7 @@
 (function() {
 
 	var TEMPLATE_FILE_ACTION_TRIGGER =
-		'<a class="action action-{{nameLowerCase}}" href="#" data-action="{{name}}">' +
+		'<a class="action action-{{nameLowerCase}} icon-{{nameLowerCase}}" href="#" data-action="{{name}}">' +
 		'{{#if icon}}<img class="svg" alt="{{altText}}" src="{{icon}}" />{{/if}}' +
 		'{{#if displayName}}<span> {{displayName}}</span>{{/if}}' +
 		'</a>';
@@ -142,6 +142,7 @@
 				displayName: action.displayName,
 				mime: mime,
 				order: action.order || 0,
+				class: action.class,
 				icon: action.icon,
 				permissions: action.permissions,
 				type: action.type || FileActions.TYPE_DROPDOWN,
@@ -602,9 +603,6 @@
 				mime: 'all',
 				order: -30,
 				permissions: OC.PERMISSION_UPDATE,
-				icon: function() {
-					return OC.imagePath('core', 'actions/rename');
-				},
 				actionHandler: function (filename, context) {
 					context.fileList.rename(filename);
 				}
@@ -631,9 +629,6 @@
 				order: 1000,
 				// permission is READ because we show a hint instead if there is no permission
 				permissions: OC.PERMISSION_DELETE,
-				icon: function() {
-					return OC.imagePath('core', 'actions/delete');
-				},
 				actionHandler: function(fileName, context) {
 					// if there is no permission to delete do nothing
 					if((context.$file.data('permissions') & OC.PERMISSION_DELETE) === 0) {
