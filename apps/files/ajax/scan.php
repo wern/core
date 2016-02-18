@@ -51,9 +51,9 @@ foreach ($users as $user) {
 	$scanner->listen('\OC\Files\Utils\Scanner', 'scanFile', array($listener, 'file'));
 	try {
 		if ($force) {
-			$scanner->scan($dir);
+			//$scanner->scan($dir);
 		} else {
-			$scanner->backgroundScan($dir);
+			//$scanner->backgroundScan($dir);
 		}
 	} catch (\Exception $e) {
 		$eventSource->send('error', get_class($e) . ': ' . $e->getMessage());
