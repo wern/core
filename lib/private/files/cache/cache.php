@@ -220,6 +220,11 @@ class Cache {
 	 * @throws \RuntimeException
 	 */
 	public function put($file, array $data) {
+		if(strpos($this->storageId, 'local::') === 0) {
+			$logger = \OC::$server->getLogger();
+			$logger->logException(new \Exception(), ['app' => 'filecacheDebug']);
+			$logger->error(print_r([$file, $data], true), ['app' => 'filecacheDebug']);
+		}
 		if (($id = $this->getId($file)) > -1) {
 			$this->update($id, $data);
 			return $id;
