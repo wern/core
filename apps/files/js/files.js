@@ -230,7 +230,7 @@
 				});
 
 			//do a background scan if needed
-			scanFiles();
+			//scanFiles();
 
 			// display storage warnings
 			setTimeout(Files.displayStorageWarnings, 100);
